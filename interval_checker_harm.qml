@@ -3,7 +3,7 @@ import MuseScore 3.0
 MuseScore {
   menuPath: "Plugins.Proof Reading.Interval Checker Harmonic"
   version: "0.1"
-  description: "This plugin checks intervals between adjacent notes including across measures"
+  description: "This plugin checks intervals between adjacent notes within the voices in a score"
 
   function checkInterval(n1, n2) {
  var note1 = n1;
@@ -58,28 +58,34 @@ MuseScore {
       Qt.quit();
     }
 
-    var cursor = curScore.newCursor();
-    var prevNote = null; // Переменная для хранения предыдущей ноты
-    cursor.rewind(); // Перемещаем курсор в начало партитуры
+    for (var staffIdx = 0; staffIdx < curScore.nstaves; ++staffIdx) {
+      var cursor = curScore.newCursor();
+      cursor.staffIdx = staffIdx;
+      cursor.voice = 0; // Change this if you want to target a different voice within the staff
+      cursor.rewind(); // Перемещаем курсор в начало дорожки
 
-    // Цикл по всем сегментам партитуры
-    while (cursor.segment) {
-      if (cursor.element && cursor.element.type === Element.NOTE) {
-        var note = cursor.element;
-        if (prevNote) {
-          // Проверка и отображение интервала между предыдущей и текущей нотой
-          var interval = checkInterval(prevNote, note);
-          var text = newElement(Element.STAFF_TEXT);
-          text.text = interval;
-          text.color = "#0000FF";
-          text.yOffset = -5; // Сдвигаем текст вверх для лучшей видимости
-          curScore.startCmd();
-          note.add(text);
-          curScore.endCmd();
+      var prevNote = null; // Переменная для хранения предыдущей ноты
+
+      // Цикл по всем сегментам дорожки
+      while (cursor.segment) {
+        var element = cursor.segment.elementAt(cursor.staffIdx);
+        if (element && element.type === Element.NOTE) {
+          var note = element;
+          if (prevNote) {
+            // Проверка и отображение интервала между предыдущей и текущей нотой
+            var interval = checkInterval(prevNote, note);
+            var text = newElement(Element.STAFF_TEXT);
+            text.text = interval;
+            text.color = "#0000FF";
+            text.yOffset = -5; // Сдвигаем текст вверх для лучшей видимости
+            curScore.startCmd();
+            note.add(text);
+            curScore.endCmd();
+          }
+          prevNote = note; // Сохраняем текущую ноту как предыдущую
         }
-        prevNote = note; // Сохраняем текущую ноту как предыдущую
+        cursor.next(); // Переходим к следующему сегменту
       }
-      cursor.next(); // Переходим к следующему сегменту
     }
 
     console.log("Intervals check complete");
