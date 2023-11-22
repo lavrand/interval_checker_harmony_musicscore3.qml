@@ -61,13 +61,13 @@ MuseScore {
     // Iterate through all staves in the score.
     for (var staffIdx = 0; staffIdx < curScore.nstaves; ++staffIdx) {
       // Iterate through all voices in the staff.
-      for (var voiceIdx = 0; voiceIdx < 4; ++voiceIdx) {  // Assuming a max of 4 voices per staff.
+      for (var voiceIdx = 0; voiceIdx < 4; ++voiceIdx) {
         var cursor = curScore.newCursor();
         cursor.staffIdx = staffIdx;
         cursor.voice = voiceIdx;
-        cursor.rewind();  // Move cursor to the beginning of the score.
+        cursor.rewind(); // Move cursor to the beginning of the score.
 
-        var prevNote = null;  // Variable to hold the previous note.
+        var prevNote = null; // Variable to hold the previous note.
 
         // Loop through all segments in the staff.
         while (cursor.segment) {
@@ -77,17 +77,17 @@ MuseScore {
             if (prevNote) {
               // Check and display the interval between the previous and current note.
               var interval = checkInterval(prevNote, note);
+              curScore.startCmd(); // Start the command sequence for the undo stack
               var text = newElement(Element.STAFF_TEXT);
               text.text = interval;
               text.color = "#0000FF";
-              text.yOffset = -5;  // Offset the text for better visibility.
-              curScore.startCmd();
-              cursor.add(text);
-              curScore.endCmd();
+              // Attach the created text element to the note.
+              note.add(text);
+              curScore.endCmd(); // End the command sequence for the undo stack
             }
-            prevNote = note;  // Save the current note as previous.
+            prevNote = note; // Save the current note as previous.
           }
-          cursor.next();  // Move to the next segment.
+          cursor.next(); // Move to the next segment.
         }
       }
     }
