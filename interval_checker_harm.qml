@@ -77,13 +77,16 @@ MuseScore {
             if (prevNote) {
               // Check and display the interval between the previous and current note.
               var interval = checkInterval(prevNote, note);
-              curScore.startCmd(); // Start the command sequence for the undo stack
+              curScore.startCmd();
               var text = newElement(Element.STAFF_TEXT);
               text.text = interval;
               text.color = "#0000FF";
-              // Attach the created text element to the note.
-              note.add(text);
-              curScore.endCmd(); // End the command sequence for the undo stack
+              // The yOffset property might not be supported, instead try using the placement property
+              // text.yOffset = -5;
+              text.placement = Placement.ABOVE;
+              // Add the text element to the score at the current cursor position
+              curScore.addElement(text, cursor.segment, cursor.staffIdx, cursor.voice);
+              curScore.endCmd();
             }
             prevNote = note; // Save the current note as previous.
           }
